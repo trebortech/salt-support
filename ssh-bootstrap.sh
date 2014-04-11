@@ -10,6 +10,11 @@
 #       LICENSE: Apache 2.0
 #  ORGANIZATION: TreborTech, LLC (www.trebortech.com)
 #       CREATED: 4/10/2014
+#
+#
+#  Updates:
+#         20140-04-11-1 - Shane Gibson
+#           Much better way of handling ssh connections
 #===============================================================================
 
 set -o nounset 
@@ -81,11 +86,14 @@ done
 
 shift $((OPTIND-1))
 
+_Options="-i ${_Sssh_Key} ${_Target}"
+
 # If your bootstrap-salt.sh script is from the develop branch
-ssh -i ${_Ssh_Key} ${_Target} sudo bash -s -- < bootstrap-salt.sh -X -A ${_Master_Name} -i ${_Minion_Name}
+ssh ${_Options} sudo bash -s -- < bootstrap-salt.sh -X -A ${_Master_Name} -i ${_Minion_Name}
 
 # If your bootstrap-salt.sh script is from the stable branch
-#ssh -i ${_Ssh_Key} ${_Target} sudo bash -s -- < bootstrap-salt.sh -X -A ${_Master_Name}
-#ssh -i ${_Ssh_Key} ${_Target} sudo sed -i "s/\#id\:/id:\ ${_Minion_Name}/g" /etc/salt/minion
-#ssh -i ${_Ssh_Key} ${_Target} sudo  service salt-minion stop
-#ssh -i ${_Ssh_Key} ${_Target} sudo  service salt-minion start
+#ssh ${_Options} " ( sudo bash -s -- < bootstrap-salt.sh -X -A ${_Master_Name} ) &&
+#                  ( sudo sed -i "s/\#id\:/id:\ ${_Minion_Name}/g" /etc/salt/minion ) &&
+#                  ( sudo service salt-minion stop ) &&
+#                  ( sudo service salt-minion start ) "
+
