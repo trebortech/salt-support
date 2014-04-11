@@ -18,4 +18,7 @@ ssh-bootstrap.sh
   -c  ssh login that has sudo priv<br>
   -m  DNS / IP address of salt master<br>
   -n  The minion name you would like to set<br>
-    
+  
+  <b>Optional:</b><br>
+  -k  SSH key to use for connection (default to ~/.ssh/id_rsa)<br>
+  -b  Use the develop branch of bootstrap-salt.sh script (defaults to stable)<br>
