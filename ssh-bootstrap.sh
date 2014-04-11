@@ -22,7 +22,7 @@ __ScriptVersion="2014.04.10-1"
 __ScriptName="ssh-bootstrap.sh"
 
 _Ssh_Key="${HOME}/.ssh/id_rsa"
-
+_Branch="stable"
 
 #---  PRE-FLIGHT  --------------------------------------------------------------
 #  DESCRIPTION:  Verify dependencies can be found
@@ -30,7 +30,7 @@ _Ssh_Key="${HOME}/.ssh/id_rsa"
 
 if [ -e "bootstrap-salt.sh" ]
 then
-  echo "boothstrap-salt.sh is available"
+  echo "bootstrap-salt.sh is available"
 else
   echo "************************************"
   echo "YOU MUST DOWNLOAD A FILE TO CONTINUE"
@@ -53,21 +53,32 @@ usage() {
   Usage :  ${__ScriptName} [options]
 
   Examples:
-    - ${__ScriptName}
+    - ${__ScriptName} -h
     - ${__ScriptName} -c ubuntu@10.111.5.90 -m saltme.mydomain.com -n coolclient
+    - ${__ScriptName} -k myspecialkey.priv -c ubuntu@10.111.5.90 -m saltme.mydomain.com -n coolclient
 
   Options:
   -h  Display this message
+  
+  Mandatory
   -c  ssh login that has sudo priv
   -m  DNS / IP address of salt master
   -n  The minion name you would like to set
-
+  
+  Optional
+  -k  SSH key to use for connection (default to ~/.ssh/id_rsa)
+  -b  Use the develop branch of bootstrap-salt.sh script (defaults to stable)
 
   
 EOT
 }
 
-while getopts ":hc::n::m::k" opt 
+if [ "$#" -eq 0 ]; then
+  usage
+  exit 1
+fi
+
+while getopts ":hc::n::m::k::b" opt 
 do
     case "${opt}" in
         h)  usage; exit 0;;
@@ -75,25 +86,31 @@ do
         n)  _Minion_Name=$OPTARG;;
         m)  _Master_Name=$OPTARG;;
         k)  _Ssh_Key=$OPTARG;;
+        b)  _Branch='develop';;
         \?) echo
-            echoerror "Option does not exist : $OPTARG"
+            echo "Option does not exist : $OPTARG"
             usage
             exit 1
             ;;
-
     esac
 done
 
 shift $((OPTIND-1))
 
-_Options="-i ${_Sssh_Key} ${_Target}"
+_Options="-i ${_Ssh_Key} ${_Target}"
 
-# If your bootstrap-salt.sh script is from the develop branch
-ssh ${_Options} sudo bash -s -- < bootstrap-salt.sh -X -A ${_Master_Name} -i ${_Minion_Name}
+case "${_Branch}" in
+  develop)
+      # If your bootstrap-salt.sh script is from the develop branch
+      ssh ${_Options} sudo bash -s -- < bootstrap-salt.sh -X -A ${_Master_Name} -i ${_Minion_Name}
+      ;;
+  stable)
+      # If your bootstrap-salt.sh script is from the stable branch
+      ssh ${_Options} " ( sudo bash -s -- " < bootstrap-salt.sh "-X -A ${_Master_Name} ) &&
+                        ( sudo sed -i 's/\#id\:/id:\ ${_Minion_Name}/g' /etc/salt/minion ) &&
+                        ( sudo service salt-minion stop ) &&
+                        ( sudo service salt-minion start ) "
+      ;;
+esac
 
-# If your bootstrap-salt.sh script is from the stable branch
-#ssh ${_Options} " ( sudo bash -s -- < bootstrap-salt.sh -X -A ${_Master_Name} ) &&
-#                  ( sudo sed -i "s/\#id\:/id:\ ${_Minion_Name}/g" /etc/salt/minion ) &&
-#                  ( sudo service salt-minion stop ) &&
-#                  ( sudo service salt-minion start ) "
 
