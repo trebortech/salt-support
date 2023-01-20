@@ -5,7 +5,7 @@ Support files
 
 
 ssh-bootstrap.sh
-  This file allows you to bootstrap a remote client via ssh. It patches in the bootstrap-salt.sh file which can be downloaded at https://raw.githubusercontent.com/saltstack/salt-bootstrap/develop/bootstrap-salt.sh <br>
+  This file allows you to bootstrap a remote salt-minion or salt-master (controller) via ssh. It patches in the bootstrap-salt.sh file which can be downloaded at https://raw.githubusercontent.com/saltstack/salt-bootstrap/develop/bootstrap-salt.sh <br>
   <br>
   Usage :  ssh-bootstrap.sh [options]<br>
   <br>
@@ -21,4 +21,4 @@ ssh-bootstrap.sh
   
   <b>Optional:</b><br>
   -k  SSH key to use for connection (default to ~/.ssh/id_rsa)<br>
-  -b  Use the develop branch of bootstrap-salt.sh script (defaults to stable)<br>
+  -t  Type of salt deployment. Default to minion. [minion | controller])<br>
